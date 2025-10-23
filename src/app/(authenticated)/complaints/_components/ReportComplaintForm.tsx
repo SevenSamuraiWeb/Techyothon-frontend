@@ -13,7 +13,18 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api"
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
+import Cookies from "js-cookie"
+
+// Fix for Leaflet's default marker icons in React
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+})
 
 const containerStyle = { width: '100%', height: '300px' }
 
@@ -37,10 +48,7 @@ export default function ReportComplaintForm() {
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
     const [mapOpen, setMapOpen] = useState(false)
     const [loadingLocation, setLoadingLocation] = useState(false)
-
-    const { isLoaded } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    })
+    const [loading, setLoading] = useState(false)
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null
@@ -73,6 +81,7 @@ export default function ReportComplaintForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setLoading(true)
 
         if (!title || !details || !location || !evidence) {
             alert("Please fill in all fields and select a location.")
@@ -85,7 +94,11 @@ export default function ReportComplaintForm() {
         formData.append("latitude", location.lat.toString())
         formData.append("longitude", location.lng.toString())
         formData.append("image", evidence)
-
+        const userid = Cookies.get("token") ? JSON.parse(Cookies.get("token") || "").user.userid : null
+        console.log("User ID:", userid)
+        if (userid) {
+            formData.append("user_id", userid)
+        }
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/submit`, {
                 method: "POST",
@@ -104,7 +117,20 @@ export default function ReportComplaintForm() {
         } catch (error) {
             console.error("Error while uploading:", error)
             alert("Failed to submit complaint.")
+        } finally {
+            setLoading(false)
         }
+    }
+
+    // Custom component to handle map clicks
+    const LocationMarker = () => {
+        useMapEvents({
+            click(e) {
+                setLocation({ lat: e.latlng.lat, lng: e.latlng.lng })
+            },
+        })
+
+        return location ? <Marker position={location} /> : null
     }
 
     return (
@@ -115,7 +141,7 @@ export default function ReportComplaintForm() {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-h-[80%] overflow-y-scroll">
                 <DialogHeader>
                     <DialogTitle>Report a New Complaint</DialogTitle>
                 </DialogHeader>
@@ -177,21 +203,19 @@ export default function ReportComplaintForm() {
                     </div>
 
                     {/* Map Selection */}
-                    {mapOpen && isLoaded && location && (
+                    {mapOpen && location && (
                         <div className="mt-2">
-                            <GoogleMap
-                                mapContainerStyle={containerStyle}
+                            <MapContainer
                                 center={location}
                                 zoom={15}
-                                onClick={(e) =>
-                                    setLocation({
-                                        lat: e.latLng?.lat() || location.lat,
-                                        lng: e.latLng?.lng() || location.lng,
-                                    })
-                                }
+                                style={containerStyle}
                             >
-                                <Marker position={location} />
-                            </GoogleMap>
+                                <TileLayer
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                />
+                                <LocationMarker />
+                            </MapContainer>
                             <Button
                                 variant="outline"
                                 className="mt-2"
@@ -206,7 +230,7 @@ export default function ReportComplaintForm() {
                         <DialogClose asChild>
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
-                        <Button type="submit">Submit Complaint</Button>
+                        <Button type="submit" disabled={loading}>{loading ? "Submitting..." : "Submit Complaint"}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

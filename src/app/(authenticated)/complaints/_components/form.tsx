@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
+import ReportComplaintForm from "./ReportComplaintForm"
 
 // ----------------------------
 // Interfaces
@@ -144,6 +145,10 @@ export default function ComplainForm() {
                             </Badge>
                         </div>
                     </div>
+                </div>
+
+                <div className="max-h-[80%] overflow-y-scroll">
+                    <ReportComplaintForm />
                 </div>
 
                 {/* Complaints Table */}

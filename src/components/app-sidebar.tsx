@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut, LayoutDashboard, BarChart3, FileText } from "lucide-react"
+import { LogOut, LayoutDashboard, BarChart3, FileText, LucideLocationEdit } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -36,6 +36,11 @@ const data = {
             title: "Complaints",
             url: "/complaints",
             icon: FileText,
+        },
+        {
+            title: "Maps",
+            url: "/maps",
+            icon: LucideLocationEdit,
         },
     ],
 }
