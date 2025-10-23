@@ -39,7 +39,7 @@ const COLORS = {
     chart: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e']
 }
 
-export default function DashboardPage() {
+export default function AnalyticsPage() {
     const [data, setData] = useState<DashboardData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
@@ -47,7 +47,7 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/analytics/dashboard?days_back=30")
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/analytics/dashboard?days_back=30`)
                 if (!res.ok) throw new Error('Failed to fetch')
                 const json = await res.json()
                 setData(json)
@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <div className="text-center space-y-4">
                     <div className="relative w-16 h-16 mx-auto">
                         <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
     if (error || !data) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-white flex items-center justify-center p-4">
                 <div className="text-center space-y-4 max-w-md bg-white rounded-md p-6 shadow-sm border border-gray-100">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
                     <p className="text-gray-900 text-xl font-semibold">Unable to Load Data</p>
@@ -117,9 +117,6 @@ export default function DashboardPage() {
                 <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900">
-                                Analytics Dashboard
-                            </h1>
                             <p className="text-gray-600 text-sm sm:text-base mt-1 flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-gray-500" />
                                 Last {data.overview.days_analyzed} days

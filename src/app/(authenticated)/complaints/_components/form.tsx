@@ -298,14 +298,17 @@ export default function ComplainForm() {
                                                                     </div>
                                                                 )}
 
-                                                                {/* FIX: Cleaned up Link component */}
-                                                                <Link
-                                                                    href={`/complaints/${complaint.id}`}
-                                                                    className="text-slate-600 hover:underline text-base font-medium inline-flex items-center gap-1.5 pt-2"
-                                                                >
-                                                                    <SquareArrowOutUpLeft className="w-4 h-4" />
-                                                                    View Details
-                                                                </Link>
+                                                                {/* View Details Link */}
+                                                                <div className="flex justify-start mt-3">
+                                                                    <Link
+                                                                        href={`/complaints/${complaint.id}`}
+                                                                        className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                                                                    >
+                                                                        <SquareArrowOutUpLeft className="w-4 h-4" />
+                                                                        View Details
+                                                                    </Link>
+                                                                </div>
+
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
