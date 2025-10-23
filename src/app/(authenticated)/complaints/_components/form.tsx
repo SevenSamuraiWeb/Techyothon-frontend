@@ -1,219 +1,156 @@
-'use client'
+"use client"
+
+import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
     Table,
     TableBody,
+    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import React, { useState } from "react"
-import {
-    ChevronDown,
-    ChevronRight,
-    MapPin,
-    Building2,
-    FileText,
-    Image,
-    SquareArrowOutUpLeft, // FIX: Corrected icon name
-} from "lucide-react"
+import { Eye, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
-import ReportComplaintForm from "./ReportComplaintForm"
 
-enum status {
-    Open = "Open",
-    InProgress = "In Progress",
-    Resolved = "Resolved",
-}
-
+// ----------------------------
+// Interfaces
+// ----------------------------
 interface complaint {
-    id: number;
-    subject: string;
-    description: string;
-    status: status;
-    image: string | null; // FIX: Changed 'File' type to 'string' to match data
-    location: string;
-    department: string;
+    complaint_id: string
+    status: string
+    category: string
+    priority: string
+    title: string
+    description: string
+    created_at: Date
 }
 
-const complaindata: complaint[] = [
-    {
-        id: 1,
-        subject: "Pothole on Main Street",
-        description: `There's a large pothole near the traffic signal causing vehicle damage.`,
-        status: status.Open,
-        image: "/images/pothole.jpg",
-        location: "Andheri West, Mumbai",
-        department: "Road Maintenance",
-    },
-    {
-        id: 2,
-        subject: "Streetlight not working",
-        description: "The streetlight near my house has been off for 5 days, making the lane unsafe at night.",
-        status: status.InProgress,
-        image: "/images/streetlight.jpg",
-        location: "Baner, Pune",
-        department: "Electrical Department",
-    },
-    {
-        id: 3,
-        subject: "Garbage overflow near market",
-        description: "The garbage bins near the local market are overflowing and attracting stray dogs.",
-        status: status.Resolved,
-        image: "/images/garbage.jpg",
-        location: "Rajajinagar, Bengaluru",
-        department: "Sanitation",
-    },
-    {
-        id: 4,
-        subject: "Water leakage on street",
-        description: "Water is leaking continuously from an underground pipe, wasting clean water.",
-        status: status.Open,
-        image: "/images/waterleak.jpg",
-        location: "Sector 22, Chandigarh",
-        department: "Water Supply",
-    },
-    {
-        id: 5,
-        subject: "Illegal dumping of waste",
-        description: "People are dumping construction debris in the park area behind our colony.",
-        status: status.InProgress,
-        image: "/images/dumping.jpg",
-        location: "Alkapuri, Vadodara",
-        department: "Environment",
-    },
-    {
-        id: 6,
-        subject: "Broken street sign",
-        description: "The street name board near the post office is broken and lying on the ground.",
-        status: status.InProgress,
-        image: "/images/signboard.jpg",
-        location: "Anna Nagar, Chennai",
-        department: "Public Works",
-    },
-    {
-        id: 7,
-        subject: "Blocked drainage",
-        description: "The drainage outside our apartment is clogged and causing bad odor.",
-        status: status.Resolved,
-        image: "/images/drainage.jpg",
-        location: "Kukatpally, Hyderabad",
-        department: "Sewerage",
-    },
-    {
-        id: 8,
-        subject: "Power outage in area",
-        description: "Power has been out in the neighborhood since last night, no updates from authorities.",
-        status: status.Open,
-        image: "/images/poweroutage.jpg",
-        location: "Salt Lake, Kolkata",
-        department: "Electricity Board",
-    },
-    {
-        id: 9,
-        subject: "Tree fallen blocking road",
-        description: "A large tree fell due to last night’s storm and is blocking the entire lane.",
-        status: status.InProgress,
-        image: "/images/fallentree.jpg",
-        location: "Civil Lines, Jaipur",
-        department: "Disaster Management",
-    },
-    {
-        id: 10,
-        subject: "Damaged public bench",
-        description: "One of the benches in the park is broken and could injure children.",
-        status: status.Open,
-        image: "/images/bench.jpg",
-        location: "Koregaon Park, Pune",
-        department: "Parks and Recreation",
-    },
-];
-
-
-const getStatusColor = (s: status) => {
-    switch (s) {
-        case status.Open:
-            return "bg-red-100 text-red-700 hover:bg-red-100"
-        case status.InProgress:
-            return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-        case status.Resolved:
-            return "bg-green-100 text-green-700 hover:bg-green-100"
+// ----------------------------
+// Helper Functions
+// ----------------------------
+const getPriorityColor = (priority: string) => {
+    const colors = {
+        high: "bg-red-100 text-red-800 border-red-200",
+        medium: "bg-amber-100 text-amber-800 border-amber-200",
+        low: "bg-green-100 text-green-800 border-green-200"
     }
+    return colors[priority.toLowerCase() as keyof typeof colors] || "bg-slate-100 text-slate-800 border-slate-200"
 }
 
-export default function ComplainForm() {
-    const [expandedRow, setExpandedRow] = useState<number | null>(null)
+const getStatusIcon = (status: string) => {
+    const statusLower = status.toLowerCase()
+    if (statusLower.includes('resolved') || statusLower.includes('completed')) {
+        return <CheckCircle2 className="w-4 h-4 text-green-600" />
+    }
+    if (statusLower.includes('pending') || statusLower.includes('open')) {
+        return <Clock className="w-4 h-4 text-amber-600" />
+    }
+    if (statusLower.includes('rejected') || statusLower.includes('closed')) {
+        return <XCircle className="w-4 h-4 text-red-600" />
+    }
+    return <AlertCircle className="w-4 h-4 text-blue-600" />
+}
 
-    const toggleRow = (id: number) => {
-        setExpandedRow(expandedRow === id ? null : id)
+const getStatusColor = (status: string) => {
+    const statusLower = status.toLowerCase()
+    if (statusLower.includes('resolved') || statusLower.includes('completed')) {
+        return "bg-green-100 text-green-800 border-green-200"
+    }
+    if (statusLower.includes('pending') || statusLower.includes('open')) {
+        return "bg-amber-100 text-amber-800 border-amber-200"
+    }
+    if (statusLower.includes('rejected') || statusLower.includes('closed')) {
+        return "bg-red-100 text-red-800 border-red-200"
+    }
+    return "bg-blue-100 text-blue-800 border-blue-200"
+}
+
+// ----------------------------
+// Component
+// ----------------------------
+export default function ComplainForm() {
+    const [complaindata, setComplaints] = useState<complaint[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/all`)
+                if (!response.ok) throw new Error("Failed to fetch complaints")
+
+                const data = await response.json()
+                console.log("API Response:", data)
+
+                // Normalize server responses into complaint[]
+                if (Array.isArray(data)) {
+                    setComplaints(data as complaint[])
+                } else if (Array.isArray(data.complaints)) {
+                    setComplaints(data.complaints as complaint[])
+                } else if (data.complaint) {
+                    setComplaints([data.complaint] as complaint[])
+                } else if (data) {
+                    setComplaints([data] as complaint[])
+                } else {
+                    setComplaints([])
+                }
+            } catch (error) {
+                console.error("Error fetching complaints:", error)
+                setError(error instanceof Error ? error.message : "An error occurred")
+                setComplaints([])
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+                <div className="text-center space-y-4">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-slate-600 text-lg font-medium">Loading complaints...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+                <div className="text-center space-y-4 max-w-md">
+                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+                    <p className="text-slate-800 text-xl font-semibold">Failed to Load Complaints</p>
+                    <p className="text-slate-600">{error}</p>
+                </div>
+            </div>
+        )
     }
 
     return (
-        <div className="w-full p-8">
-            <div className="max-w-[90%] mx-auto">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                    <Card className="shadow-md border-0 rounded-xl">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-slate-600 mb-1">Open</p>
-                                    <p className="text-2xl font-bold text-red-600">
-                                        {complaindata.filter(c => c.status === status.Open).length}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                    <FileText className="w-6 h-6 text-red-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="shadow-md border-0 rounded-xl">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-slate-600 mb-1">In Progress</p>
-                                    <p className="text-2xl font-bold text-yellow-600">
-                                        {complaindata.filter(c => c.status === status.InProgress).length}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                    <FileText className="w-6 h-6 text-yellow-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="shadow-md border-0 rounded-xl">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-slate-600 mb-1">Resolved</p>
-                                    <p className="text-2xl font-bold text-green-600">
-                                        {complaindata.filter(c => c.status === status.Resolved).length}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                    <FileText className="w-6 h-6 text-green-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Header Section */}
+                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <Badge className="bg-blue-100 text-blue-800 border border-blue-200 px-4 py-2 text-sm font-medium">
+                                Total: {complaindata.length}
+                            </Badge>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="w-full flex justify-end mr-5 mt-8 ">
-                    <ReportComplaintForm />
-                </div>
-
-                <Card className="shadow-lg border-0 rounded-xl overflow-hidden mt-8"> {/* Added margin-top */}
-                    <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
-                        <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                            {/* FIX: Corrected h-14 to h-5 */}
-                            <FileText className="w-5 h-5" />
-                            Complaint List
+                {/* Complaints Table */}
+                <Card className="shadow-xl border border-slate-200 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-4 sm:px-6 py-5">
+                        <CardTitle className="text-xl font-bold text-slate-800">
+                            All Complaints
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -221,101 +158,84 @@ export default function ComplainForm() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                        <TableHead className="w-[50px]"></TableHead>
-                                        <TableHead className="w-[70px] font-semibold text-slate-700">ID</TableHead>
-                                        <TableHead className="font-semibold text-slate-700">Subject</TableHead>
-                                        <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                        <TableHead className="font-semibold text-slate-700">Location</TableHead>
-                                        <TableHead className="font-semibold text-slate-700">Department</TableHead>
+                                        <TableHead className="font-bold text-slate-700 whitespace-nowrap">ID</TableHead>
+                                        <TableHead className="font-bold text-slate-700 min-w-[200px]">Title</TableHead>
+                                        <TableHead className="font-bold text-slate-700 whitespace-nowrap">Category</TableHead>
+                                        <TableHead className="font-bold text-slate-700 whitespace-nowrap">Priority</TableHead>
+                                        <TableHead className="font-bold text-slate-700 whitespace-nowrap">Status</TableHead>
+                                        <TableHead className="font-bold text-slate-700 whitespace-nowrap">Created</TableHead>
+                                        <TableHead className="font-bold text-slate-700 text-center whitespace-nowrap">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
-
-                                <TableBody className="w-full">
-                                    {
-                                        complaindata.map((complaint) => (
-                                            // FIX: Key moved to the outer Fragment
-                                            <React.Fragment key={complaint.id}>
-                                                <TableRow
-                                                    className="cursor-pointer hover:bg-slate-50 transition-colors"
-                                                    onClick={() => toggleRow(complaint.id)}
-                                                >
-                                                    <TableCell>
-                                                        {expandedRow === complaint.id ? (
-                                                            <ChevronDown className="w-4 h-4 text-slate-600" />
-                                                        ) : (
-                                                            <ChevronRight className="w-4 h-4 text-slate-600" />
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="font-semibold text-slate-700">
-                                                        #{complaint.id}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium text-slate-800">
-                                                        <div className="flex items-center gap-2">
-                                                            {complaint.image && <Image className="w-4 h-4 text-blue-500" />}
-                                                            {complaint.subject}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge className={getStatusColor(complaint.status)}>
-                                                            {complaint.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2 text-slate-600">
-                                                            <MapPin className="w-4 h-4" />
-                                                            {complaint.location}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2 text-slate-600">
-                                                            <Building2 className="w-4 h-4" />
-                                                            {complaint.department}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-
-                                                {expandedRow === complaint.id && (
-                                                    // FIX: Added a unique key to the conditional row
-                                                    <TableRow key={complaint.id + "-details"} className="bg-slate-25">
-                                                        <TableCell colSpan={6} className="p-0"> {/* Removed padding */}
-                                                            <div className="p-4 space-y-4">
-                                                                <div>
-                                                                    <h4 className="font-semibold text-slate-700 mb-2">Description</h4>
-                                                                    <p className="text-slate-600 leading-relaxed">
-                                                                        {complaint.description}
-                                                                    </p>
-                                                                </div>
-
-                                                                {complaint.image && (
-                                                                    <div>
-                                                                        <h4 className="font-semibold text-slate-700 mb-2">Attached Image</h4>
-                                                                        <img
-                                                                            src={complaint.image}
-                                                                            // FIX: Dynamic alt text for accessibility
-                                                                            alt={complaint.subject}
-                                                                            className="rounded-lg shadow-md max-w-md w-full h-48 object-cover border border-slate-200"
-                                                                        />
-                                                                    </div>
-                                                                )}
-
-                                                                {/* View Details Link */}
-                                                                <div className="flex justify-start mt-3">
-                                                                    <Link
-                                                                        href={`/complaints/${complaint.id}`}
-                                                                        className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                                                                    >
-                                                                        <SquareArrowOutUpLeft className="w-4 h-4" />
-                                                                        View Details
-                                                                    </Link>
-                                                                </div>
-
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
+                                <TableBody>
+                                    {complaindata.length > 0 ? (
+                                        complaindata.map((c) => (
+                                            <TableRow
+                                                key={c.complaint_id}
+                                                className="hover:bg-slate-50 transition-colors"
+                                            >
+                                                <TableCell className="font-mono text-xs sm:text-sm text-slate-600">
+                                                    {c.complaint_id.substring(0, 8)}...
+                                                </TableCell>
+                                                <TableCell className="font-medium text-slate-800">
+                                                    <div className="max-w-xs truncate">{c.title}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="capitalize whitespace-nowrap">
+                                                        {c.category}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={`capitalize border whitespace-nowrap ${getPriorityColor(c.priority)}`}
+                                                    >
+                                                        {c.priority}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={`capitalize flex items-center gap-1 w-fit border whitespace-nowrap ${getStatusColor(c.status)}`}
+                                                    >
+                                                        {getStatusIcon(c.status)}
+                                                        {c.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-slate-600 text-sm whitespace-nowrap">
+                                                    {new Date(c.created_at).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric'
+                                                    })}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Link
+                                                        href={`/complaints/${c.complaint_id}`}
+                                                        className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg whitespace-nowrap"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        <span className="hidden sm:inline">View Details</span>
+                                                        <span className="sm:hidden">View</span>
+                                                    </Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="text-center py-12">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <AlertCircle className="w-12 h-12 text-slate-400" />
+                                                    <p className="text-slate-600 text-lg font-medium">No complaints found</p>
+                                                    <p className="text-slate-500 text-sm">There are currently no complaints in the system.</p>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
+                                {complaindata.length > 0 && (
+                                    <TableCaption className="mt-4 text-slate-600">
+                                        Showing all {complaindata.length} complaint{complaindata.length !== 1 ? 's' : ''}
+                                    </TableCaption>
+                                )}
                             </Table>
                         </div>
                     </CardContent>

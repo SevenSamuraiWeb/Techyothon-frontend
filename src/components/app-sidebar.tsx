@@ -17,6 +17,8 @@ import {
     SidebarRail,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import Cookies from "js-cookie"
+import { useRouter } from "next/navigation"
 
 const data = {
     navMain: [
@@ -40,7 +42,10 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
+    const router = useRouter()
+    const handleLogOut = () => {
 
+    }
     return (
         <Sidebar {...props}>
             {/* Sidebar Header */}
@@ -90,7 +95,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         variant="ghost"
                         className="w-full justify-start gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                         onClick={() => {
-                            // Add logout logic here
+                            Cookies.remove('token')
+                            router.push('/login')
                             console.log("User logged out")
                         }}
                     >
