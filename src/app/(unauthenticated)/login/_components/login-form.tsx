@@ -15,6 +15,7 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import Cookies from 'js-cookie'
+import { useRouter } from "next/navigation"
 
 interface LoginFormProps {
     email: string
@@ -34,6 +35,7 @@ export function LoginForm({
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -64,8 +66,10 @@ export function LoginForm({
 
             const data = await response.json()
             Cookies.set('token', JSON.stringify(data), { expires: 1 }) // Set token with 1 day expirys
+            router.push('/dashboard')
         } catch (err: any) {
             console.error('Login error:', err)
+            alert(err)
             setError(err.message)
         } finally {
             setLoading(false)
