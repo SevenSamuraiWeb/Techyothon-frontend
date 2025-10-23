@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -16,6 +16,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api"
 
 const containerStyle = { width: '100%', height: '300px' }
+
+interface ComplaintForm {
+    title: string
+    description: string
+    latitude: number
+    longitude: number
+    address?: string
+    user_id?: string
+    image: File | null
+    audio?: File | null
+}
 
 export default function ReportComplaintForm() {
     const [open, setOpen] = useState(false)
@@ -37,42 +48,63 @@ export default function ReportComplaintForm() {
         if (file) setPreview(URL.createObjectURL(file))
     }
 
-    // Open map and get current location
+    // Step 1: Ask for user's current location
     const handleSelectLocation = () => {
         setLoadingLocation(true)
-        setMapOpen(true)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
                     setLoadingLocation(false)
+                    setMapOpen(true)
                 },
                 () => {
-                    // fallback location
+                    // fallback to Mumbai
                     setLocation({ lat: 19.0760, lng: 72.8777 })
                     setLoadingLocation(false)
+                    setMapOpen(true)
                 }
             )
+        } else {
+            alert("Geolocation is not supported by your browser.")
+            setLoadingLocation(false)
         }
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!title || !details || !evidence || !location) {
-            alert("Please fill all fields and select a location.")
+
+        if (!title || !details || !location || !evidence) {
+            alert("Please fill in all fields and select a location.")
             return
         }
 
-        console.log({ title, details, evidence, location })
-        alert("Complaint submitted successfully!")
+        const formData = new FormData()
+        formData.append("title", title)
+        formData.append("description", details)
+        formData.append("latitude", location.lat.toString())
+        formData.append("longitude", location.lng.toString())
+        formData.append("image", evidence)
 
-        // Reset
-        setTitle("")
-        setDetails("")
-        setEvidence(null)
-        setPreview(null)
-        setLocation(null)
-        setOpen(false)
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/submit`, {
+                method: "POST",
+                body: formData,
+            })
+
+            if (!res.ok) throw new Error("Failed to submit complaint")
+
+            alert("Complaint submitted successfully!")
+            setOpen(false)
+            setPreview(null)
+            setTitle("")
+            setDetails("")
+            setEvidence(null)
+            setLocation(null)
+        } catch (error) {
+            console.error("Error while uploading:", error)
+            alert("Failed to submit complaint.")
+        }
     }
 
     return (
@@ -130,8 +162,12 @@ export default function ReportComplaintForm() {
 
                     {/* Select Location */}
                     <div className="flex flex-col">
-                        <Button type="button" onClick={handleSelectLocation}>
-                            Select Location
+                        <Button
+                            type="button"
+                            onClick={handleSelectLocation}
+                            disabled={loadingLocation}
+                        >
+                            {loadingLocation ? "Fetching Location..." : "Select Location"}
                         </Button>
                         {location && (
                             <p className="mt-2 text-sm text-slate-700">
@@ -140,7 +176,7 @@ export default function ReportComplaintForm() {
                         )}
                     </div>
 
-                    {/* Map Dialog */}
+                    {/* Map Selection */}
                     {mapOpen && isLoaded && location && (
                         <div className="mt-2">
                             <GoogleMap
@@ -149,8 +185,8 @@ export default function ReportComplaintForm() {
                                 zoom={15}
                                 onClick={(e) =>
                                     setLocation({
-                                        lat: e.latLng?.lat() || 0,
-                                        lng: e.latLng?.lng() || 0,
+                                        lat: e.latLng?.lat() || location.lat,
+                                        lng: e.latLng?.lng() || location.lng,
                                     })
                                 }
                             >
