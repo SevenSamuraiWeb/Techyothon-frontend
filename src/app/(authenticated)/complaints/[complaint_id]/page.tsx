@@ -100,7 +100,7 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                 const { complaint_id } = await params;
                 console.log("Fetching complaint:", complaint_id);
 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/${complaint_id}`);
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/{complaint_id:[0-9a-fA-F]{24}}?complaint_id=${complaint_id}`);
 
                 if (!response.ok) {
                     console.error("Failed to fetch data");

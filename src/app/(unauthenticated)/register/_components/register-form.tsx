@@ -45,13 +45,12 @@ export function RegisterForm({
         const name = (form.elements.namedItem("name") as HTMLInputElement).value
         const email = (form.elements.namedItem("email") as HTMLInputElement).value
         const password = (form.elements.namedItem("password") as HTMLInputElement).value
-        const hashedPassword = await bcrypt.hash(password, 10)
         const role = (form.elements.namedItem("role") as HTMLSelectElement).value as "user" | "admin"
 
         const payload = new FormData()
         payload.append("name", name)
         payload.append("email", email)
-        payload.append("password", hashedPassword)
+        payload.append("password", password)
         payload.append("role", role)
 
         try {
@@ -67,7 +66,14 @@ export function RegisterForm({
 
             const data = await response.json()
             console.log("Registration successful:", data)
-            router.push('/login')
+            if (data.success === false) {
+                alert(data.type)
+                return
+            }
+            alert("Registration successful!")
+            setTimeout(() => {
+                router.push('/login')
+            }, 1000)
             // Optionally reset form or redirect
         } catch (error) {
             console.error("Registration error:", error)
@@ -79,7 +85,7 @@ export function RegisterForm({
         setFormData({
             name,
             email,
-            password: hashedPassword,
+            password: password,
             role,
         })
     }

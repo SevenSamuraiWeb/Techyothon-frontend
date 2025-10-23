@@ -16,6 +16,7 @@ import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import Cookies from 'js-cookie'
 import { useRouter } from "next/navigation"
+import bcrypt from "bcryptjs"
 
 interface LoginFormProps {
     email: string
@@ -45,6 +46,7 @@ export function LoginForm({
         const form = e.currentTarget
         const email = (form.elements.namedItem("email") as HTMLInputElement).value
         const password = (form.elements.namedItem("password") as HTMLInputElement).value
+        // const hashedPassword = await bcrypt.hash(password, 10)
         const role = (form.elements.namedItem("role") as HTMLSelectElement).value as "user" | "admin"
         const formdata = new FormData()
         formdata.append("email", email)
@@ -65,7 +67,20 @@ export function LoginForm({
             }
 
             const data = await response.json()
-            Cookies.set('token', JSON.stringify(data), { expires: 1 }) // Set token with 1 day expirys
+            console.log('Login successful:', data)
+            if (data.verified === false) {
+                alert(data.type)
+                console.error('Login error:', data.type)
+                return
+            }
+            const session = {
+                user: {
+                    id: data.userid,
+                    email: formData.email,
+                    role: formData.role,
+                },
+            }
+            Cookies.set('token', JSON.stringify(session), { expires: 1 }) // Set token with 1 day expirys
             router.push('/dashboard')
         } catch (err: any) {
             console.error('Login error:', err)
