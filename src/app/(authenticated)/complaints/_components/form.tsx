@@ -15,6 +15,7 @@ import {
 import { Eye, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
 import ReportComplaintForm from "./ReportComplaintForm"
+import Cookies from "js-cookie"
 
 // ----------------------------
 // Interfaces
@@ -76,11 +77,28 @@ export default function ComplainForm() {
     const [complaindata, setComplaints] = useState<complaint[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-
     useEffect(() => {
         const fetchData = async () => {
+            const tokenString = Cookies.get('token');
+            let token: any = null;
+            if (tokenString) {
+                try {
+                    token = JSON.parse(tokenString);
+                } catch (e) {
+                    console.error("Failed to parse token from cookies:", e);
+                    token = null;
+                }
+            }
+
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/all`)
+                let response;
+                if (token?.user?.role === "admin") {
+                    response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/all`)
+                } else {
+                    const userId = token?.user?.id;
+                    response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/user/${userId ?? ""}`)
+                }
+
                 if (!response.ok) throw new Error("Failed to fetch complaints")
 
                 const data = await response.json()

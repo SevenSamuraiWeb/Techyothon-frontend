@@ -19,12 +19,13 @@ import {
     AlertCircle
 } from "lucide-react"
 import Link from "next/link"
+import Cookies from "js-cookie"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, Loader2 } from "lucide-react"
 
-enum Status {
-    Open = "Open",
-    InProgress = "InProgress",
-    Resolved = "Resolved",
-}
+const department = [
+    "Roads Department", "Sanitation Department", "Electricity Department", "Water Department", "Other"
+]
 
 interface Complaint {
     _id: string
@@ -91,8 +92,19 @@ const getPriorityColor = (priority?: string) => {
 
 export default function ComplaintDetail({ params }: { params: Promise<any> }) {
     const [complaintData, setComplaintData] = useState<Complaint | null>(null)
-    const [loading, setLoading] = useState(true)
-
+    const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [selectedDept, setSelectedDept] = useState<string | null>(null)
+    const rawToken = Cookies.get('token');
+    let token: { user?: { role?: string } } | undefined = undefined;
+    try {
+        if (rawToken) {
+            token = JSON.parse(rawToken);
+        }
+    } catch (e) {
+        console.warn('Failed to parse token from cookies', e);
+    }
+    const isAdmin = token?.user?.role === 'admin';
     useEffect(() => {
         const fetchComplaintData = async () => {
             try {
@@ -112,6 +124,7 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                 console.log("Complaint data:", data);
 
                 setComplaintData(data);
+                setSelectedDept(data.assigned_department);
             } catch (error) {
                 console.error("Error fetching complaint data:", error);
             } finally {
@@ -122,7 +135,52 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
         fetchComplaintData();
     }, []);
 
+    const handleAssign = async (department: string) => {
+        setLoading(true)
+        try {
+            const { complaint_id } = await params;
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/departments/assign/${complaint_id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ department }),
+            })
 
+            if (!res.ok) throw new Error("Failed to reassign department")
+
+            setSelectedDept(department)
+            console.log("✅ Reassigned successfully:", await res.json())
+        } catch (err) {
+            console.error("❌ Error reassigning department:", err)
+        } finally {
+            setLoading(false)
+            setOpen(false)
+        }
+    }
+
+    const handleStatusUpdate = async () => {
+        const { complaint_id } = await params;
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/${complaint_id}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'Resolved', updated_by: 'admin_user_id', comment: 'Marked as resolved by admin' })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            const data = await response.json();
+            console.log('Status updated successfully:', data);
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    }
     if (loading) {
         return (
             <div className="w-full min-h-screen flex justify-center items-center text-slate-600">
@@ -150,7 +208,9 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                     </Link>
                     <div className="flex gap-2">
                         <Button variant="outline">Edit</Button>
-                        <Button className="bg-slate-800 hover:bg-slate-700">Update Status</Button>
+                        {complaintData.status !== 'Resolved' && token?.user?.role === 'admin' &&
+                            <Button className="bg-slate-800 hover:bg-slate-700" onClick={handleStatusUpdate}>Update Status</Button>
+                        }
                     </div>
                 </div>
 
@@ -337,18 +397,39 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                 <CardTitle className="text-lg">Quick Actions</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 space-y-2">
-                                <Button className="w-full justify-start gap-2 bg-green-600 hover:bg-green-700">
+                                <Button disabled={!isAdmin} className="w-full justify-start gap-2 bg-green-600 hover:bg-green-700">
                                     <CheckCircle2 className="w-4 h-4" />
                                     Mark as Resolved
                                 </Button>
-                                <Button variant="outline" className="w-full justify-start gap-2">
+                                <Button disabled={!isAdmin} variant="outline" className="w-full justify-start gap-2">
                                     <AlertCircle className="w-4 h-4" />
                                     Request More Info
                                 </Button>
-                                <Button variant="outline" className="w-full justify-start gap-2">
-                                    <User className="w-4 h-4" />
-                                    Reassign
-                                </Button>
+                                <Popover open={open} onOpenChange={setOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button disabled={!isAdmin} variant="outline" className="w-full justify-start gap-2">
+                                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+                                            {selectedDept ? `Reassigned: ${selectedDept}` : "Reassign"}
+                                        </Button>
+                                    </PopoverTrigger>
+
+                                    <PopoverContent className="w-56 p-2">
+                                        <div className="flex flex-col gap-1">
+                                            {department.map((dept) => (
+                                                <Button
+                                                    key={dept}
+                                                    variant="ghost"
+                                                    className="justify-start w-full"
+                                                    onClick={() => handleAssign(dept)}
+                                                    disabled={loading}
+                                                >
+                                                    {selectedDept === dept && <Check className="w-4 h-4 mr-2 text-green-600" />}
+                                                    {dept}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </CardContent>
                         </Card>
                     </div>

@@ -76,8 +76,8 @@ export function LoginForm({
             const session = {
                 user: {
                     id: data.userid,
-                    email: formData.email,
-                    role: formData.role,
+                    email: email,
+                    role: role,
                 },
             }
             Cookies.set('token', JSON.stringify(session), { expires: 1 }) // Set token with 1 day expirys
