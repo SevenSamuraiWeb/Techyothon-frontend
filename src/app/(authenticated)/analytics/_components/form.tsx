@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
     FileText, MapPin, Clock, CheckCircle2, TrendingUp, TrendingDown,
@@ -8,7 +7,7 @@ import {
 } from "lucide-react"
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    LineChart, Line, PieChart, Pie, Cell, Area, AreaChart, CartesianGrid
+    PieChart, Pie, Cell, Area, AreaChart, CartesianGrid
 } from "recharts"
 
 interface DashboardData {

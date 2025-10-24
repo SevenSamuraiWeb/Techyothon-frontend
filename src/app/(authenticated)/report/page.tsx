@@ -9,7 +9,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import Cookies from "js-cookie"
-import { Mic, MicOff, Upload } from "lucide-react"
+import { Mic, MicOff } from "lucide-react"
 
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({

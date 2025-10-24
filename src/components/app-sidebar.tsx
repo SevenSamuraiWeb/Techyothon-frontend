@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut, LayoutDashboard, BarChart3, FileText, LucideLocationEdit, ReceiptPoundSterling, Dock } from "lucide-react"
+import { LayoutDashboard, BarChart3, FileText, LucideLocationEdit, Dock, LogOutIcon } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -115,7 +115,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             console.log("User logged out")
                         }}
                     >
-                        <LogOut className="w-4 h-4" />
+                        <LogOutIcon className="w-4 h-4" />
                         Logout
                     </Button>
                 </div>

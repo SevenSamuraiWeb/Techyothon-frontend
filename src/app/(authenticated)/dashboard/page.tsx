@@ -231,7 +231,7 @@ export default function DashboardPage() {
                                 />
                                 <MetricBox
                                     label="Hotspots"
-                                    value={analytics?.top_locations?.filter(l => l.count > 3).length || 0}
+                                    value={analytics?.top_locations?.filter(l => typeof l.count === 'number' && l.count > 3).length || 0}
                                     color="red"
                                 />
                             </div>
@@ -305,7 +305,7 @@ export default function DashboardPage() {
     );
 }
 
-function QuickStat({ label, value, icon, gradient, trend }) {
+function QuickStat({ label, value, icon, gradient, trend }: any) {
     return (
         <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-4 border border-slate-200">
             <div className={`bg-gradient-to-br ${gradient} text-white p-3 rounded-lg w-fit mb-3`}>
@@ -318,7 +318,7 @@ function QuickStat({ label, value, icon, gradient, trend }) {
     );
 }
 
-function SectionCard({ title, subtitle, icon, iconBg, children, link }) {
+function SectionCard({ title, subtitle, icon, iconBg, children, link }: any) {
     return (
         <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all p-6 border border-slate-200 group">
             <div className="flex items-start justify-between mb-5">
@@ -384,15 +384,15 @@ function StatusBadge({ status }: { status?: string }) {
     );
 }
 
-function PriorityBadge({ priority }) {
-    const priorityColors = {
+function PriorityBadge({ priority }: { priority?: string }) {
+    const priorityColors: Record<string, string> = {
         'High': 'bg-red-100 text-red-700 border-red-200',
         'Medium': 'bg-orange-100 text-orange-700 border-orange-200',
         'Low': 'bg-slate-100 text-slate-700 border-slate-200',
     };
 
     return (
-        <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${priorityColors[priority] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+        <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${priorityColors[priority ?? ''] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
             {priority}
         </span>
     );

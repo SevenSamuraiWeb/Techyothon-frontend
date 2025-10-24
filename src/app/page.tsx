@@ -18,7 +18,7 @@ const ThreeJSAnimation = () => {
     const sceneRef = useRef<any>(null);
 
     useEffect(() => {
-        let script = document.querySelector('script[src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"]');
+        let script = document.querySelector('script[src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"]') as HTMLScriptElement | null;
         let isScriptLoaded = !!script;
         let animationFrameId: number;
         let renderer: { setPixelRatio: (arg0: number) => void; setSize: (arg0: any, arg1: any) => void; setClearColor: (arg0: number, arg1: number) => void; domElement: any; render: (arg0: any, arg1: any) => void; dispose: () => void; };
@@ -154,7 +154,7 @@ const ThreeJSAnimation = () => {
             if (window.THREE) {
                 initThree();
             } else {
-                script.addEventListener('load', initThree);
+                script?.addEventListener('load', initThree);
             }
         } else {
             script = document.createElement('script');
@@ -172,10 +172,10 @@ const ThreeJSAnimation = () => {
             const mountElement = currentMount;
 
             // Remove listeners
-            window.removeEventListener('resize', onresize);
-            if (mountElement) {
-                mountElement.removeEventListener('mousemove', onmousemove);
-            }
+            // window.removeEventListener('resize', onResize);
+            // if (mountElement) {
+            //     mountElement.removeEventListener('mousemove', onMouseMove);
+            // }
 
             // Dispose of Three.js objects
             if (sceneRef.current) {
@@ -586,19 +586,19 @@ export default function LandingPage() {
                                 {link.name}
                             </a>
                         ))}
-                        <a
-                            href="#"
+                        <Link
+                            href="/login"
                             className="text-2xl text-slate-700 hover:text-indigo-600"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Log In
-                        </a>
-                        <a
-                            href="#"
+                        </Link>
+                        <Link
+                            href="/register"
                             className="mt-4 w-full text-center bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition-all"
                         >
                             Sign Up
-                        </a>
+                        </Link>
                     </div>
                 )}
 
@@ -748,7 +748,7 @@ export default function LandingPage() {
                                             src="https://placehold.co/600x400/e2e8f0/64748b?text=Analytics+Dashboard+Mockup"
                                             alt="CivicTrack Dashboard Mockup"
                                             className="w-full h-full object-cover rounded-lg"
-                                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Image+Error'; }}
+                                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => { e.currentTarget.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Image+Error'; }}
                                         />
                                     </div>
                                 </div>
@@ -818,7 +818,7 @@ export default function LandingPage() {
                                         className="w-12 h-12 rounded-full object-cover"
                                         src="https://placehold.co/100x100/e2e8f0/64748b?text=S.M."
                                         alt="Sarah M."
-                                        onError={(e) => { e.target.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=S.M.'; }}
+                                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=S.M.'; }}
                                     />
                                     <div className="ml-4">
                                         <p className="font-semibold text-slate-900">Sarah M.</p>
@@ -840,7 +840,7 @@ export default function LandingPage() {
                                         className="w-12 h-12 rounded-full object-cover"
                                         src="https://placehold.co/100x100/e2e8f0/64748b?text=D.K."
                                         alt="David K."
-                                        onError={(e) => { e.target.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=D.K.'; }}
+                                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=D.K.'; }}
                                     />
                                     <div className="ml-4">
                                         <p className="font-semibold text-slate-900">David K.</p>

@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
-import bcrypt from 'bcryptjs';
 import { useRouter } from "next/navigation"
 
 interface RegisterFormProps {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import {
     MapPin,
     Layers,
-    Filter,
     AlertCircle,
     Clock,
     CheckCircle2,
     XCircle,
-    X,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
