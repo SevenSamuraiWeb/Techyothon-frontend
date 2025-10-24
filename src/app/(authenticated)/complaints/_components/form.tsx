@@ -77,6 +77,14 @@ export default function ComplainForm() {
     const [complaindata, setComplaints] = useState<complaint[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 5
+    // Filters
+    const [filterTitle, setFilterTitle] = useState("")
+    const [filterCategory, setFilterCategory] = useState("")
+    const [filterPriority, setFilterPriority] = useState("")
+    const [filterStatus, setFilterStatus] = useState("")
     useEffect(() => {
         const fetchData = async () => {
             const tokenString = Cookies.get('token');
@@ -151,6 +159,23 @@ export default function ComplainForm() {
         )
     }
 
+    // Filtering logic
+    const filteredComplaints = complaindata.filter((c) => {
+        return (
+            (!filterTitle || c.title.toLowerCase().includes(filterTitle.toLowerCase())) &&
+            (!filterCategory || c.category.toLowerCase().includes(filterCategory.toLowerCase())) &&
+            (!filterPriority || c.priority.toLowerCase().includes(filterPriority.toLowerCase())) &&
+            (!filterStatus || c.status.toLowerCase().includes(filterStatus.toLowerCase()))
+        )
+    })
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage)
+    const paginatedComplaints = filteredComplaints.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    )
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
@@ -159,7 +184,7 @@ export default function ComplainForm() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                             <Badge className="bg-blue-100 text-blue-800 border border-blue-200 px-4 py-2 text-sm font-medium">
-                                Total: {complaindata.length}
+                                Total: {filteredComplaints.length}
                             </Badge>
                         </div>
                     </div>
@@ -178,6 +203,37 @@ export default function ComplainForm() {
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="overflow-x-auto">
+                            {/* Filters Row */}
+                            <div className="flex flex-wrap gap-2 p-4 bg-slate-50 border-b border-slate-200">
+                                <input
+                                    type="text"
+                                    placeholder="Filter Title"
+                                    className="px-2 py-1 border rounded text-sm"
+                                    value={filterTitle}
+                                    onChange={e => { setFilterTitle(e.target.value); setCurrentPage(1); }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Filter Category"
+                                    className="px-2 py-1 border rounded text-sm"
+                                    value={filterCategory}
+                                    onChange={e => { setFilterCategory(e.target.value); setCurrentPage(1); }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Filter Priority"
+                                    className="px-2 py-1 border rounded text-sm"
+                                    value={filterPriority}
+                                    onChange={e => { setFilterPriority(e.target.value); setCurrentPage(1); }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Filter Status"
+                                    className="px-2 py-1 border rounded text-sm"
+                                    value={filterStatus}
+                                    onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                                />
+                            </div>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -191,8 +247,8 @@ export default function ComplainForm() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {complaindata.length > 0 ? (
-                                        complaindata.map((c) => (
+                                    {paginatedComplaints.length > 0 ? (
+                                        paginatedComplaints.map((c) => (
                                             <TableRow
                                                 key={c.complaint_id}
                                                 className="hover:bg-slate-50 transition-colors"
@@ -233,7 +289,7 @@ export default function ComplainForm() {
                                                 <TableCell className="text-center">
                                                     <Link
                                                         href={`/complaints/${c.complaint_id}`}
-                                                        className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg whitespace-nowrap"
+                                                        className="inline-flex items-center gap-2 bg-stone-500 hover:bg-stone-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg whitespace-nowrap"
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                         <span className="hidden sm:inline">View Details</span>
@@ -254,9 +310,27 @@ export default function ComplainForm() {
                                         </TableRow>
                                     )}
                                 </TableBody>
-                                {complaindata.length > 0 && (
+                                {filteredComplaints.length > 0 && (
                                     <TableCaption className="mt-4 text-slate-600">
-                                        Showing all {complaindata.length} complaint{complaindata.length !== 1 ? 's' : ''}
+                                        <div className="flex gap-4 justify-center items-center mt-2">
+                                            <button
+                                                className="px-3 py-1 bg-blue-100 text-blue-800 rounded border border-blue-200 disabled:opacity-50"
+                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                            >
+                                                Previous
+                                            </button>
+                                            <span>
+                                                Page {currentPage} of {totalPages}
+                                            </span>
+                                            <button
+                                                className="px-3 py-1 bg-blue-100 text-blue-800 rounded border border-blue-200 disabled:opacity-50"
+                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
                                     </TableCaption>
                                 )}
                             </Table>

@@ -137,7 +137,7 @@ export default function ReportComplaintForm() {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-slate-600 text-white hover:bg-slate-700">
-                    Report Complaint
+                    + Report Complaint
                 </Button>
             </DialogTrigger>
 
