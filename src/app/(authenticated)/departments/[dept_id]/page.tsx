@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ReassignPopover } from "../_components/ReassignPopover"
-import { AlertCircle, Clock, Filter, Search } from "lucide-react"
+import { AlertCircle, Clock, Filter, Search, ArrowLeft } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Link from "next/link"
 
 interface Complaint {
     _id: string
@@ -98,6 +99,7 @@ export default function DepartmentComplaintsPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
+                <Link href={`/departments`} className="text-stone-800 hover:underline mb-10 flex flex-row items-center gap-x-2"><ArrowLeft /> Back</Link>
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900">{dept}</h1>
