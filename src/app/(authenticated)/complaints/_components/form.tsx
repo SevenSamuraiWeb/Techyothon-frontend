@@ -16,6 +16,7 @@ import { Eye, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
 import ReportComplaintForm from "./ReportComplaintForm"
 import Cookies from "js-cookie"
+import { useRouter } from "next/navigation"
 
 // ----------------------------
 // Interfaces
@@ -130,6 +131,7 @@ export default function ComplainForm() {
                 setComplaints([])
             } finally {
                 setLoading(false)
+                useRouter().refresh()
             }
         }
 

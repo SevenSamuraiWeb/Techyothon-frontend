@@ -47,6 +47,11 @@ const data = {
             url: "/report",
             icon: Dock,
         },
+        {
+            title: "Departments",
+            url: "/departments",
+            icon: Dock,
+        },
     ],
 }
 
