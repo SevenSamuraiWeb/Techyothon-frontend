@@ -109,6 +109,14 @@ export default function AnalyticsPage() {
         ? ((data.overview.recent_complaints / data.overview.total_complaints) * 100).toFixed(0)
         : 0
 
+    // Helper to stringify address object
+    function formatAddress(addr: any) {
+        if (!addr) return "";
+        if (typeof addr === "string") return addr;
+        // If address is object, join its values
+        return [addr.address, addr.city, addr.state, addr.country, addr.pincode].filter(Boolean).join(", ");
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Simple Light Header */}
@@ -443,7 +451,7 @@ export default function AnalyticsPage() {
                                         <Badge className="bg-blue-500 text-white text-xs">#{idx + 1}</Badge>
                                     </div>
                                     <div className="text-gray-800 text-sm mb-3 line-clamp-2 min-h-[2.5rem] font-medium">
-                                        {loc.address}
+                                        {formatAddress(loc.address)}
                                     </div>
                                     <div className="flex items-end justify-between">
                                         <div>

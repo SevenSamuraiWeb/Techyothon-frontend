@@ -91,6 +91,47 @@ const getPriorityColor = (priority?: string) => {
 }
 
 export default function ComplaintDetail({ params }: { params: Promise<any> }) {
+    // Helper for dynamic import of react-leaflet components
+    const renderMap = () => {
+        if (!complaintData?.location?.coordinates) return null;
+        if (typeof window === "undefined") return null;
+        const [lng, lat] = complaintData.location.coordinates;
+        const MapContainer = require("react-leaflet").MapContainer;
+        const TileLayer = require("react-leaflet").TileLayer;
+        const Marker = require("react-leaflet").Marker;
+        const L = require("leaflet");
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+            iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+            shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+        });
+        return (
+            <div className="mb-6">
+                <div className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Location
+                </div>
+                <div className="rounded-lg overflow-hidden border border-slate-200">
+                    <div style={{ height: "350px", width: "100%" }}>
+                        <MapContainer
+                            center={{ lat, lng }}
+                            zoom={15}
+                            style={{ height: "100%", width: "100%" }}
+                        >
+                            <TileLayer
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            />
+                            <Marker position={{ lat, lng }} />
+                        </MapContainer>
+                    </div>
+                </div>
+                <div className="mt-2 text-sm text-slate-700">
+                    Coordinates: {lat?.toFixed(6)}, {lng?.toFixed(6)}
+                </div>
+            </div>
+        );
+    }
     const [complaintData, setComplaintData] = useState<Complaint | null>(null)
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -218,7 +259,7 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-800">
-                            Complaint #{complaintData._id.slice(-6)}
+                            Complaint #{complaintData ? complaintData._id.slice(-6) : "Unknown"}
                         </h1>
                         <p className="text-slate-600 mt-1">{complaintData.title}</p>
                     </div>
@@ -231,6 +272,8 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                         </Badge>
                     </div>
                 </div>
+
+
 
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -250,7 +293,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                 </p>
                             </CardContent>
                         </Card>
-
                         {/* Evidence */}
                         {complaintData.image_url && (
                             <Card className="shadow-md border-0 rounded-xl">
@@ -269,7 +311,8 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                 </CardContent>
                             </Card>
                         )}
-
+                        {/* Map Section */}
+                        {renderMap()}
                         {/* Timeline */}
                         <Card className="shadow-md border-0 rounded-xl">
                             <CardHeader className="border-b bg-slate-50">
@@ -302,7 +345,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                             </CardContent>
                         </Card>
                     </div>
-
                     {/* Right: Metadata */}
                     <div className="space-y-6">
                         {/* Complaint Info */}
@@ -318,15 +360,25 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                         <p className="font-semibold text-slate-800">{complaintData.assigned_department}</p>
                                     </div>
                                 </div>
-
                                 <div className="flex items-start gap-3">
                                     <MapPin className="w-5 h-5 text-slate-600 mt-0.5" />
                                     <div>
                                         <p className="text-sm text-slate-600">Address</p>
-                                        <p className="font-semibold text-slate-800">{complaintData.address}</p>
+                                        <p className="font-semibold text-slate-800">{
+                                            typeof complaintData.address === 'string'
+                                                ? complaintData.address
+                                                : complaintData.address && typeof complaintData.address === 'object'
+                                                    ? [
+                                                        (complaintData.address as any).address,
+                                                        (complaintData.address as any).city,
+                                                        (complaintData.address as any).state,
+                                                        (complaintData.address as any).country,
+                                                        (complaintData.address as any).pincode
+                                                    ].filter(Boolean).join(', ')
+                                                    : ''
+                                        }</p>
                                     </div>
                                 </div>
-
                                 <div className="flex items-start gap-3">
                                     <FileText className="w-5 h-5 text-slate-600 mt-0.5" />
                                     <div>
@@ -334,7 +386,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                         <p className="font-semibold text-slate-800">{complaintData.category}</p>
                                     </div>
                                 </div>
-
                                 <div className="flex items-start gap-3">
                                     <Calendar className="w-5 h-5 text-slate-600 mt-0.5" />
                                     <div>
@@ -344,7 +395,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                         </p>
                                     </div>
                                 </div>
-
                                 <div className="flex items-start gap-3">
                                     <Clock className="w-5 h-5 text-slate-600 mt-0.5" />
                                     <div>
@@ -356,7 +406,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                 </div>
                             </CardContent>
                         </Card>
-
                         {/* Reporter Info */}
                         {complaintData.reportedBy && (
                             <Card className="shadow-md border-0 rounded-xl">
@@ -371,7 +420,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                             <p className="font-semibold text-slate-800">{complaintData.reportedBy.name}</p>
                                         </div>
                                     </div>
-
                                     <div className="flex items-start gap-3">
                                         <Mail className="w-5 h-5 text-slate-600 mt-0.5" />
                                         <div>
@@ -379,7 +427,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                             <p className="font-semibold text-slate-800 break-all">{complaintData.reportedBy.email}</p>
                                         </div>
                                     </div>
-
                                     <div className="flex items-start gap-3">
                                         <Phone className="w-5 h-5 text-slate-600 mt-0.5" />
                                         <div>
@@ -390,7 +437,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                 </CardContent>
                             </Card>
                         )}
-
                         {/* Quick Actions */}
                         <Card className="shadow-md border-0 rounded-xl">
                             <CardHeader className="border-b bg-slate-50">
@@ -412,7 +458,6 @@ export default function ComplaintDetail({ params }: { params: Promise<any> }) {
                                             {selectedDept ? `Reassigned: ${selectedDept}` : "Reassign"}
                                         </Button>
                                     </PopoverTrigger>
-
                                     <PopoverContent className="w-56 p-2">
                                         <div className="flex flex-col gap-1">
                                             {department.map((dept) => (

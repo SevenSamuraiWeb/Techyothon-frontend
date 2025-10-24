@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
-import "leaflet/dist/leaflet.css"
-import L from "leaflet"
 import Cookies from "js-cookie"
 import { Mic, MicOff } from "lucide-react"
+import dynamic from "next/dynamic"
 
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+// Dynamically import the Map component with no SSR
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+    ssr: false,
+    loading: () => (
+        <div className="rounded-lg overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center" style={{ height: "350px" }}>
+            <p className="text-slate-600">Loading map...</p>
+        </div>
+    )
 })
 
 export default function ReportComplaintPage() {
@@ -88,23 +89,15 @@ export default function ReportComplaintPage() {
         }
     }
 
-    // 🗺️ Map marker click handler
-    const LocationMarker = () => {
-        useMapEvents({
-            click(e) {
-                setLocation({ lat: e.latlng.lat, lng: e.latlng.lng })
-            },
-        })
-        return location ? <Marker position={location} /> : null
-    }
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        const token = Cookies.get("token")
+        const userid = token ? JSON.parse(token).user?.id : null
+        console.log("Submitting complaint for user:", userid)
         if (!title || !details || !location || !evidence) {
             alert("Please fill in all required fields and select a location.")
             return
         }
-
         setLoading(true)
         const formData = new FormData()
         formData.append("title", title)
@@ -113,11 +106,12 @@ export default function ReportComplaintPage() {
         formData.append("longitude", location.lng.toString())
         formData.append("image", evidence)
         if (audio) formData.append("audio", audio)
-
-        const token = Cookies.get("token")
-        const userid = token ? JSON.parse(token).user?.userid : null
         if (userid) formData.append("user_id", userid)
 
+        console.log("FormData entries:")
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`)
+        }
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/complaints/submit`, {
                 method: "POST",
@@ -240,21 +234,7 @@ export default function ReportComplaintPage() {
                                     Use My Current Location
                                 </Button>
                             </div>
-                            <div className="rounded-lg overflow-hidden border border-slate-200">
-                                {location && (
-                                    <MapContainer
-                                        center={location}
-                                        zoom={15}
-                                        style={{ height: "350px", width: "100%" }}
-                                    >
-                                        <TileLayer
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                        />
-                                        <LocationMarker />
-                                    </MapContainer>
-                                )}
-                            </div>
+                            <MapComponent location={location} setLocation={setLocation} />
                             {location && (
                                 <p className="mt-2 text-sm text-slate-700">
                                     Coordinates: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}

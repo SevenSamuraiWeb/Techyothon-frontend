@@ -22,7 +22,8 @@ import { useRouter } from "next/navigation"
 // Interfaces
 // ----------------------------
 interface complaint {
-    complaint_id: string
+    complaint_id?: string
+    _id?: string,
     status: string
     category: string
     priority: string
@@ -131,7 +132,7 @@ export default function ComplainForm() {
                 setComplaints([])
             } finally {
                 setLoading(false)
-                useRouter().refresh()
+                // useRouter().refresh()
             }
         }
 
@@ -192,10 +193,6 @@ export default function ComplainForm() {
                     </div>
                 </div>
 
-                <div className="max-h-[80%] overflow-y-scroll">
-                    <ReportComplaintForm />
-                </div>
-
                 {/* Complaints Table */}
                 <Card className="shadow-xl border border-slate-200 rounded-2xl overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-4 sm:px-6 py-5">
@@ -252,11 +249,11 @@ export default function ComplainForm() {
                                     {paginatedComplaints.length > 0 ? (
                                         paginatedComplaints.map((c) => (
                                             <TableRow
-                                                key={c.complaint_id}
+                                                key={c.complaint_id || c._id}
                                                 className="hover:bg-slate-50 transition-colors"
                                             >
                                                 <TableCell className="font-mono text-xs sm:text-sm text-slate-600">
-                                                    {c.complaint_id.substring(0, 8)}...
+                                                    {c.complaint_id ? `${c.complaint_id.substring(0, 8)}...` : "-"}
                                                 </TableCell>
                                                 <TableCell className="font-medium text-slate-800">
                                                     <div className="max-w-xs truncate">{c.title}</div>
