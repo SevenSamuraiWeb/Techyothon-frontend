@@ -14,9 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
-import ReportComplaintForm from "./ReportComplaintForm"
 import Cookies from "js-cookie"
-import { useRouter } from "next/navigation"
 
 // ----------------------------
 // Interfaces
@@ -253,7 +251,12 @@ export default function ComplainForm() {
                                                 className="hover:bg-slate-50 transition-colors"
                                             >
                                                 <TableCell className="font-mono text-xs sm:text-sm text-slate-600">
-                                                    {c.complaint_id ? `${c.complaint_id.substring(0, 8)}...` : "-"}
+                                                    {c.complaint_id
+                                                        ? `${c.complaint_id.substring(0, 8)}...`
+                                                        : c._id
+                                                            ? `${c._id.substring(0, 8)}...`
+                                                            : "unknown"
+                                                    }
                                                 </TableCell>
                                                 <TableCell className="font-medium text-slate-800">
                                                     <div className="max-w-xs truncate">{c.title}</div>
@@ -287,7 +290,7 @@ export default function ComplainForm() {
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Link
-                                                        href={`/complaints/${c.complaint_id}`}
+                                                        href={`/complaints/${c.complaint_id || c._id}`}
                                                         className="inline-flex items-center gap-2 bg-stone-500 hover:bg-stone-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg whitespace-nowrap"
                                                     >
                                                         <Eye className="w-4 h-4" />
